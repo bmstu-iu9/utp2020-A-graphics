@@ -1,5 +1,26 @@
 <html>
+
+<head>
+  <meta charset=“utf-8”>
+  <title> Двумерный график </title>
+  <link rel="stylesheet" type="text/сss">
+</head>
+
 <body>
-Здесь будет программа.
+  <div>Опишите входную функцию через элементарные функции:</div>
+  <div>f(x) = <input type="text" id="func"></div>
+
+  <div> x = [ <input type="text" id="leftX"> ;
+    <input type="text" id="rightX"> ]</div>
+  <div> y = [ <input type="text" id="botY"> ;
+    <input type="text" id="topY"> ]
+    <input type="checkbox" id="check" /> auto </div>
+
+  <button id="bttn"> Нарисовать </button>
+
+  <div id="result"> </div>
+  <canvas id="graph" width="1000" height="1000"> </canvas>
+
 </body>
+
 </html>
