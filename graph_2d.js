@@ -18,22 +18,20 @@ let maxY;
 let scaleX = 1;
 let scaleY = 1;
 
+let deltaX;
+
 const indent = 50; // отступ от границ
 const BLACK = '#000000';
 const WHITE = '#AAAAAA';
 const TEXT_FONT = "18pt Times New Roman";
 
 function draw() {
-  //инициализация
   init();
 
-  //отрисовка системы координат
   drawCoordinatesSystem();
-};
 
-function getElementValue(name) {
-  return document.getElementById(name).value
-}
+  drawGraph()
+};
 
 //инициализация входных данных и подготовка области для отрисовки
 function init() {
@@ -56,16 +54,25 @@ function init() {
   //создание функции из входной строки
   expr = new Function('x', 'return ' + func.value);
 
-  // Отрисовка квадрата на холсте
+  const doubleIndent = 2 * indent;
+  let innerWidth = clientWidth - doubleIndent;
+  let innerHeight = clientHeight - doubleIndent;
+  let canvasWidth = maxX - minX;
+  deltaX = canvasWidth / innerWidth;
+
+  // отрисовка квадрата на холсте
   ctx.fillStyle = BLACK;
   ctx.strokeRect(0, 0, clientWidth, clientHeight);
   ctx.strokeStyle = WHITE;
-  const doubleIndent = 2 * indent;
-  ctx.strokeRect(indent, indent, clientWidth - doubleIndent, clientHeight - doubleIndent);
+  ctx.strokeRect(indent, indent, innerWidth, innerHeight);
 
   //инициализация переменных масштабирования
-  scaleX = (clientWidth - doubleIndent) / (maxX - minX);
-  scaleY = (clientHeight - doubleIndent) / (maxY - minY);
+  scaleX = innerWidth / canvasWidth;
+  scaleY = innerHeight / (maxY - minY);
+};
+
+function getElementValue(name) {
+  return document.getElementById(name).value
 };
 
 function drawCoordinatesSystem() {
@@ -82,8 +89,8 @@ function drawCoordinatesSystem() {
   const arrowProp = 10;
   const zeroX = transformX(0);
   const zeroY = transformY(0);
-  const arrowHeight = indent * (arrowProp - 1) / arrowProp;
   const arrowWidth = indent / arrowProp;
+  const arrowHeight = arrowWidth * (arrowProp - 1);
   if (zeroX >= indent && zeroX <= h1) {
     ctx.beginPath();
     ctx.moveTo(zeroX, h1);
@@ -118,12 +125,6 @@ function drawCoordinatesSystem() {
   }
 };
 
-function clearVariables() {
-  result.innerText = "";
-  minX = maxX = minY = maxY = undefined;
-};
-
-
 //преобразование координат x
 function transformX(x) {
   return Math.round((x - minX) * scaleX + indent);
@@ -134,6 +135,62 @@ function transformY(y) {
   return Math.round((maxY - y) * scaleY + indent);
 };
 
+function drawGraph() {
+  ctx.fillStyle = BLACK;
+  ctx.beginPath();
+
+  let prevX = minX;
+  let curX = prevX;
+  let numPoints = 2 * clientHeight;
+  while (curX <= maxX) {
+    drawPoints(prevX, curX, numPoints);
+    prevX = curX;
+    curX = prevX + deltaX;
+  }
+  ctx.stroke();
+};
+
+const MAX_DRAW_LEVEL = 100;
+
+function almostEqual(x, y) {
+  return Math.abs(x - y) < Number.EPSILON * Math.max(Math.abs(x), Math.abs(y));
+}
+
+function validateYCoord(y) {
+  return !(isNaN(y) || y == Infinity || y == -Infinity || y > maxY || y < minY);
+}
+
+function drawPoints(prevX, curX, numPoints) {
+  let countPoints = 0;
+  let drawLevel = 0;
+
+  function drawPointRec(prevX, curX) {
+    if (countPoints >= numPoints || drawLevel > MAX_DRAW_LEVEL) {
+      return;
+    }
+    ++drawLevel;
+    const prevY = expr(prevX);
+    const curY = expr(curX);
+    if (validateYCoord(prevY) || validateYCoord(curY)) {
+      const screenCurY = transformY(curY);
+      if (Math.abs(screenCurY - transformY(prevY)) <= 1) {
+        ctx.fillRect(transformX(curX), screenCurY, 1, 1);
+        ++countPoints;
+      } else {
+        if (almostEqual(curX, prevX)) {
+          drawPoint(curX, curX);
+        } else {
+          const midX = (prevX + curX) / 2;
+          drawPointRec(prevX, midX);
+          drawPointRec(midX, curX);
+        }
+      }
+    }
+    --drawLevel;
+  }
+  drawPointRec(prevX, curX);
+};
+
 function buttonOnClick(e) {
   clearVariables();
   try {
@@ -142,3 +199,10 @@ function buttonOnClick(e) {
     result.innerText = err.message;
   }
 }
+
+function clearVariables() {
+  minX = maxX = minY = maxY = undefined;
+  deltaX = 0;
+  scaleX = scaleY = 1;
+  result.innerText = "";
+};
