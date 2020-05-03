@@ -24,6 +24,28 @@ const indent = 50; // отступ от границ
 const BLACK = '#000000';
 const WHITE = '#AAAAAA';
 const TEXT_FONT = "18pt Times New Roman";
+const MAX_DRAW_LEVEL = 100;
+
+const π = Math.pi;
+let abs = Math.abs;
+let cos = Math.cos;
+let arccos = Math.acos;
+let sin = Math.sin;
+let arcsin = Math.asin;
+let tg = Math.tan;
+let arctg = Math.atan;
+let pow = Math.pow;
+let sqrt = Math.sqrt;
+let exp = Math.exp;
+let ln = Math.log;
+
+function ctg(x){
+  return 1 / tg(x);
+};
+
+function arcctg(x) {
+  return π * .5 - arctg(x);
+};
 
 function draw() {
   init();
@@ -149,8 +171,6 @@ function drawGraph() {
   }
   ctx.stroke();
 };
-
-const MAX_DRAW_LEVEL = 100;
 
 function almostEqual(x, y) {
   return Math.abs(x - y) < Number.EPSILON * Math.max(Math.abs(x), Math.abs(y));
